@@ -52,9 +52,9 @@ SDL_Texture* loadTexture(SnakeGame *game, const char* path) {
 void generateFood(SnakeGame *game) {
     game->food.x = rand() % (SCREEN_WIDTH / CELL_SIZE) * CELL_SIZE;
     game->food.y = rand() % (SCREEN_HEIGHT / CELL_SIZE) * CELL_SIZE;
-    if (int i = 0; i < game->snakeLenght; i++){
+    for (int i = 0; i < game->snakeLength; i++){
         if (game->snake[i].x == game->food.x  && game->snake[i].y == game->food.y){
-            generateFood(game)
+            generateFood(game);
         }
 
     }
@@ -131,6 +131,12 @@ void update(SnakeGame *game) {
         game->snake[i] = game->snake[i - 1];
     }
     game->snake[0] = newHead;
+
+    // debug
+    for (int i = game->snakeLength - 1; i > 0; --i) {
+        printf("%d %d\n", game->snake[i].x, game->snake[i].y);
+    }
+
 
     if (newHead.x == game->food.x && newHead.y == game->food.y) {
         // Add a new segment to the snake
