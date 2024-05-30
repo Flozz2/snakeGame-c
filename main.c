@@ -132,12 +132,6 @@ void update(SnakeGame *game) {
     }
     game->snake[0] = newHead;
 
-    // debug
-    for (int i = game->snakeLength - 1; i > 0; --i) {
-        printf("%d %d\n", game->snake[i].x, game->snake[i].y);
-    }
-
-
     if (newHead.x == game->food.x && newHead.y == game->food.y) {
         // Add a new segment to the snake
         game->snakeLength++;
