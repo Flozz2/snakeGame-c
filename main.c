@@ -218,7 +218,7 @@ int SDL_main(int argc, char *argv[]) {
     SnakeGame game;
     game.window = SDL_CreateWindow("Snake Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     game.renderer = SDL_CreateRenderer(game.window, -1, SDL_RENDERER_ACCELERATED);
-    game.font = TTF_OpenFont("OpenSans-Regular.ttf", FONT_SIZE);
+    game.font = TTF_OpenFont("textures/fonts/OpenSans-Regular.ttf", FONT_SIZE);
     if (!game.font) {
         fprintf(stderr, "Failed to load font: %s\n", TTF_GetError());
         return -1;
