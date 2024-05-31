@@ -35,7 +35,7 @@ typedef struct
     SDL_Texture *headTexture;
     SDL_Texture *bodyTexture;
     SDL_Texture *tailTexture;
-    SDL_Texture *turnTexture;  // Placeholder for turning segments
+    SDL_Texture *turnTexture;
     SDL_Texture *appleTexture;
     Direction direction;
     Point snake[SCREEN_WIDTH * SCREEN_HEIGHT / CELL_SIZE];
@@ -73,7 +73,7 @@ void generateFood(SnakeGame *game)
 
 bool checkCollision(SnakeGame *game)
 {
-    // Check wall collision
+    // Check wall
     if (game->snake[0].x < 0)
         game->snake[0].x = SCREEN_WIDTH - CELL_SIZE;
     else if (game->snake[0].x >= SCREEN_WIDTH)
@@ -146,6 +146,25 @@ void update(SnakeGame *game)
         break;
     }
 
+    // Check wall
+    if (newHead.x < 0)
+        newHead.x = SCREEN_WIDTH - CELL_SIZE;
+    else if (newHead.x >= SCREEN_WIDTH)
+        newHead.x = 0;
+
+    if (newHead.y < 0)
+        newHead.y = SCREEN_HEIGHT - CELL_SIZE;
+    else if (newHead.y >= SCREEN_HEIGHT)
+        newHead.y = 0;
+
+    // Check eat
+    if (newHead.x == game->food.x && newHead.y == game->food.y)
+    {
+        game->snakeLength++;
+        generateFood(game);
+        game->score++;
+    }
+
     // Move snake
     for (int i = game->snakeLength - 1; i > 0; --i)
     {
@@ -153,22 +172,10 @@ void update(SnakeGame *game)
     }
     game->snake[0] = newHead;
 
-    if (newHead.x == game->food.x && newHead.y == game->food.y)
-    {
-        // Add a new segment to the snake
-        game->snakeLength++;
-        // Ensure the new segment doesn't affect the previous segment's position
-        game->snake[game->snakeLength - 1] = game->snake[game->snakeLength - 2];
-        // Generate new food
-        generateFood(game);
-        // Increase score
-        game->score++;
-    }
-
-    if (checkCollision(game))
-    {
-        game->running = false;
-    }
+    // if (checkCollision(game))
+    //{
+    //     game->running = false;
+    // }
 }
 
 void renderText(SnakeGame *game, const char *text, int x, int y)
@@ -205,22 +212,24 @@ void render(SnakeGame *game)
         if (i == 0)
         {
             // Determine the rotation angle for the head based on the direction
-            Point nextSegment = game->snake[1];
-            if (nextSegment.x < game->snake[0].x)
+            double angle;
+            switch (game->direction)
             {
-                angle = 0.0; // Head pointing right
-            }
-            else if (nextSegment.x > game->snake[0].x)
-            {
-                angle = 180.0; // Head pointing left
-            }
-            else if (nextSegment.y < game->snake[0].y)
-            {
-                angle = 90.0; // Head pointing down
-            }
-            else if (nextSegment.y > game->snake[0].y)
-            {
-                angle = 270.0; // Head pointing up
+            case UP:
+                angle = 270.0;
+                break;
+            case DOWN:
+                angle = 90;
+                break;
+            case RIGHT:
+                angle = 0.0;
+                break;
+            case LEFT:
+                angle = 180.0;
+                break;
+            default:
+                angle = 0.0;
+                break;
             }
             SDL_RenderCopyEx(game->renderer, game->headTexture, NULL, &rect, angle, NULL, SDL_FLIP_NONE);
         }
@@ -228,19 +237,37 @@ void render(SnakeGame *game)
         {
             // Determine the rotation angle for the tail based on the direction
             Point prevSegment = game->snake[i - 1];
-            if (prevSegment.x < game->snake[i].x)
+            // Edge cases
+            if ((prevSegment.x == (SCREEN_WIDTH - CELL_SIZE)) && (game->snake[i].x == 0))
+            {
+                angle = 180.0;
+            }
+            else if ((prevSegment.x == 0) && (game->snake[i].x == (SCREEN_WIDTH - CELL_SIZE)))
+            {
+                angle = 0.0;
+            }
+            else if ((prevSegment.y == (SCREEN_HEIGHT - CELL_SIZE)) && (game->snake[i].y == 0))
+            {
+                angle = 270.0;
+            }
+            else if ((prevSegment.y == 0) && (game->snake[i].y == (SCREEN_HEIGHT - CELL_SIZE)))
+            {
+                angle = 90.0;
+            }
+            // Normal cases
+            else if ((prevSegment.x < game->snake[i].x))
             {
                 angle = 180.0; // Tail pointing left
             }
-            else if (prevSegment.x > game->snake[i].x)
+            else if ((prevSegment.x > game->snake[i].x))
             {
                 angle = 0.0; // Tail pointing right
             }
-            else if (prevSegment.y < game->snake[i].y)
+            else if ((prevSegment.y < game->snake[i].y))
             {
                 angle = 270.0; // Tail pointing up
             }
-            else if (prevSegment.y > game->snake[i].y)
+            else if ((prevSegment.y > game->snake[i].y))
             {
                 angle = 90.0; // Tail pointing down
             }
@@ -323,7 +350,6 @@ void render(SnakeGame *game)
 
     SDL_RenderPresent(game->renderer);
 }
-
 
 void runGame(SnakeGame *game)
 {
