@@ -1,10 +1,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+#include <pthread.h>
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -71,6 +73,33 @@ void generateFood(SnakeGame *game)
             generateFood(game);
         }
     }
+}
+
+void *playSoundEffect(void *arg)
+{
+    const char *path = (const char *)arg;
+    Mix_Chunk *sound = Mix_LoadWAV(path);
+    if (!sound)
+    {
+        printf("Failed to load sound! SDL_mixer Error: %s\n", Mix_GetError());
+        return NULL;
+    }
+
+    Mix_PlayChannel(-1, sound, 0);
+    while (Mix_Playing(-1) != 0)
+    {
+        SDL_Delay(100);
+    }
+
+    Mix_FreeChunk(sound);
+    return NULL;
+}
+
+void playSound(const char *path)
+{
+    pthread_t soundThread;
+    pthread_create(&soundThread, NULL, playSoundEffect, (void *)path);
+    pthread_detach(soundThread);
 }
 
 bool checkCollision(SnakeGame *game)
@@ -165,6 +194,7 @@ void update(SnakeGame *game)
         game->snakeLength++;
         generateFood(game);
         game->score++;
+        playSound("assets/default_textures/sounds/apple_eat.wav");
     }
 
     // Move snake
@@ -374,9 +404,11 @@ void runGame(SnakeGame *game)
 int SDL_main(int argc, char *argv[])
 {
     srand(time(NULL)); // Seed for random number generation
-    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     TTF_Init();
     IMG_Init(IMG_INIT_PNG);
+    SDL_Init(SDL_INIT_AUDIO);
+    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
 
     SnakeGame game;
     game.window = SDL_CreateWindow("Snake Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
@@ -422,6 +454,7 @@ int SDL_main(int argc, char *argv[])
     SDL_DestroyWindow(game.window);
     TTF_Quit();
     IMG_Quit();
+    Mix_Quit();
     SDL_Quit();
     return 0;
 }
