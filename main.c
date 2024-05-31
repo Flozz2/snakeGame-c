@@ -235,9 +235,9 @@ void runGame(SnakeGame *game)
         SDL_Delay(delay_ms);
         // Decrease delay as score increases (makes the game faster)
         delay_ms = BASE_DELAY_MS - game->score * 5;
-        if (delay_ms < 50)
+        if (delay_ms < 100)
         {
-            delay_ms = 50; // Cap minimum delay to prevent game from becoming too fast
+            delay_ms = 100; // Cap minimum delay to prevent game from becoming too fast
         }
     }
 }
