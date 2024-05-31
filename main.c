@@ -35,6 +35,7 @@ typedef struct
     SDL_Texture *headTexture;
     SDL_Texture *bodyTexture;
     SDL_Texture *tailTexture;
+    SDL_Texture *turnTexture;  // Placeholder for turning segments
     SDL_Texture *appleTexture;
     Direction direction;
     Point snake[SCREEN_WIDTH * SCREEN_HEIGHT / CELL_SIZE];
@@ -195,21 +196,120 @@ void render(SnakeGame *game)
 
     // Render snake
     SDL_Rect rect;
+    double angle = 0.0;
+    SDL_RendererFlip flip = SDL_FLIP_NONE;
+
     for (int i = 0; i < game->snakeLength; ++i)
     {
-        if (i == 1)
+        rect = (SDL_Rect){game->snake[i].x, game->snake[i].y, CELL_SIZE, CELL_SIZE};
+        if (i == 0)
         {
-            SDL_RenderCopy(game->renderer, game->headTexture, NULL, &rect);
+            // Determine the rotation angle for the head based on the direction
+            Point nextSegment = game->snake[1];
+            if (nextSegment.x < game->snake[0].x)
+            {
+                angle = 0.0; // Head pointing right
+            }
+            else if (nextSegment.x > game->snake[0].x)
+            {
+                angle = 180.0; // Head pointing left
+            }
+            else if (nextSegment.y < game->snake[0].y)
+            {
+                angle = 90.0; // Head pointing down
+            }
+            else if (nextSegment.y > game->snake[0].y)
+            {
+                angle = 270.0; // Head pointing up
+            }
+            SDL_RenderCopyEx(game->renderer, game->headTexture, NULL, &rect, angle, NULL, SDL_FLIP_NONE);
         }
         else if (i == game->snakeLength - 1)
         {
-            SDL_RenderCopy(game->renderer, game->tailTexture, NULL, &rect);
+            // Determine the rotation angle for the tail based on the direction
+            Point prevSegment = game->snake[i - 1];
+            if (prevSegment.x < game->snake[i].x)
+            {
+                angle = 180.0; // Tail pointing left
+            }
+            else if (prevSegment.x > game->snake[i].x)
+            {
+                angle = 0.0; // Tail pointing right
+            }
+            else if (prevSegment.y < game->snake[i].y)
+            {
+                angle = 270.0; // Tail pointing up
+            }
+            else if (prevSegment.y > game->snake[i].y)
+            {
+                angle = 90.0; // Tail pointing down
+            }
+            SDL_RenderCopyEx(game->renderer, game->tailTexture, NULL, &rect, angle, NULL, SDL_FLIP_NONE);
         }
         else
         {
-            SDL_RenderCopy(game->renderer, game->bodyTexture, NULL, &rect);
+            // Determine if this segment is turning
+            Point prevSegment = game->snake[i - 1];
+            Point nextSegment = game->snake[i + 1];
+            if ((prevSegment.x != nextSegment.x) && (prevSegment.y != nextSegment.y))
+            {
+                // This segment is turning
+                if (prevSegment.y < game->snake[i].y && nextSegment.x < game->snake[i].x) // Right to Up
+                {
+                    angle = 270.0;
+                    flip = SDL_FLIP_VERTICAL;
+                }
+                else if (prevSegment.y > game->snake[i].y && nextSegment.x < game->snake[i].x) // Right to Down
+                {
+                    angle = 90.0;
+                    flip = SDL_FLIP_NONE;
+                }
+                else if (prevSegment.y < game->snake[i].y && nextSegment.x > game->snake[i].x) // Left to Up
+                {
+                    angle = 270.0;
+                    flip = SDL_FLIP_NONE;
+                }
+                else if (prevSegment.y > game->snake[i].y && nextSegment.x > game->snake[i].x) // Left to Down
+                {
+                    angle = 90.0;
+                    flip = SDL_FLIP_VERTICAL;
+                }
+                else if (prevSegment.x < game->snake[i].x && nextSegment.y < game->snake[i].y) // Bottom to Left
+                {
+                    angle = 180.0;
+                    flip = SDL_FLIP_NONE;
+                }
+                else if (prevSegment.x < game->snake[i].x && nextSegment.y > game->snake[i].y) // Bottom to Right
+                {
+                    angle = 180.0;
+                    flip = SDL_FLIP_VERTICAL;
+                }
+                else if (prevSegment.x > game->snake[i].x && nextSegment.y < game->snake[i].y) // Up to Left
+                {
+                    angle = 0.0;
+                    flip = SDL_FLIP_VERTICAL;
+                }
+                else if (prevSegment.x > game->snake[i].x && nextSegment.y > game->snake[i].y) // Up to right
+                {
+                    angle = 0.0;
+                    flip = SDL_FLIP_NONE;
+                }
+                SDL_RenderCopyEx(game->renderer, game->turnTexture, NULL, &rect, angle, NULL, flip);
+            }
+            else
+            {
+                // Determine the rotation angle for the body segment
+                if (prevSegment.x != game->snake[i].x)
+                {
+                    angle = 0.0; // Body horizontal
+                }
+                else if (prevSegment.y != game->snake[i].y)
+                {
+                    angle = 90.0; // Body vertical
+                }
+                SDL_RenderCopyEx(game->renderer, game->bodyTexture, NULL, &rect, angle, NULL, SDL_FLIP_NONE);
+            }
         }
-        rect = (SDL_Rect){game->snake[i].x, game->snake[i].y, CELL_SIZE, CELL_SIZE};
     }
 
     // Render food
@@ -223,6 +323,7 @@ void render(SnakeGame *game)
 
     SDL_RenderPresent(game->renderer);
 }
+
 
 void runGame(SnakeGame *game)
 {
@@ -262,8 +363,9 @@ int SDL_main(int argc, char *argv[])
     game.headTexture = loadTexture(&game, "textures/snake/head.png");
     game.bodyTexture = loadTexture(&game, "textures/snake/body.png");
     game.tailTexture = loadTexture(&game, "textures/snake/tail.png");
+    game.turnTexture = loadTexture(&game, "textures/snake/turn.png"); // Placeholder for turning segments
     game.appleTexture = loadTexture(&game, "textures/apple/apple.png");
-    if (!game.backgroundTexture || !game.headTexture || !game.bodyTexture || !game.tailTexture || !game.appleTexture)
+    if (!game.backgroundTexture || !game.headTexture || !game.bodyTexture || !game.tailTexture || !game.turnTexture || !game.appleTexture)
     {
         fprintf(stderr, "Failed to load one or more textures\n");
         return -1;
@@ -286,6 +388,7 @@ int SDL_main(int argc, char *argv[])
     SDL_DestroyTexture(game.headTexture);
     SDL_DestroyTexture(game.bodyTexture);
     SDL_DestroyTexture(game.tailTexture);
+    SDL_DestroyTexture(game.turnTexture);
     SDL_DestroyTexture(game.appleTexture);
     SDL_DestroyRenderer(game.renderer);
     SDL_DestroyWindow(game.window);
