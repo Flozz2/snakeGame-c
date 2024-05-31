@@ -353,18 +353,18 @@ int SDL_main(int argc, char *argv[])
     SnakeGame game;
     game.window = SDL_CreateWindow("Snake Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     game.renderer = SDL_CreateRenderer(game.window, -1, SDL_RENDERER_ACCELERATED);
-    game.font = TTF_OpenFont("textures/fonts/OpenSans-Regular.ttf", FONT_SIZE);
+    game.font = TTF_OpenFont("assets/default_textures/fonts/OpenSans-Regular.ttf", FONT_SIZE);
     if (!game.font)
     {
         fprintf(stderr, "Failed to load font: %s\n", TTF_GetError());
         return -1;
     }
-    game.backgroundTexture = loadTexture(&game, "textures/background/background.png");
-    game.headTexture = loadTexture(&game, "textures/snake/head.png");
-    game.bodyTexture = loadTexture(&game, "textures/snake/body.png");
-    game.tailTexture = loadTexture(&game, "textures/snake/tail.png");
-    game.turnTexture = loadTexture(&game, "textures/snake/turn.png"); // Placeholder for turning segments
-    game.appleTexture = loadTexture(&game, "textures/apple/apple.png");
+    game.backgroundTexture = loadTexture(&game, "assets/default_textures/background/background.png");
+    game.headTexture = loadTexture(&game, "assets/default_textures/snake/head.png");
+    game.bodyTexture = loadTexture(&game, "assets/default_textures/snake/body.png");
+    game.tailTexture = loadTexture(&game, "assets/default_textures/snake/tail.png");
+    game.turnTexture = loadTexture(&game, "assets/default_textures/snake/turn.png"); // Placeholder for turning segments
+    game.appleTexture = loadTexture(&game, "assets/default_textures/apple/apple.png");
     if (!game.backgroundTexture || !game.headTexture || !game.bodyTexture || !game.tailTexture || !game.turnTexture || !game.appleTexture)
     {
         fprintf(stderr, "Failed to load one or more textures\n");
