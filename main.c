@@ -13,6 +13,8 @@
 #define BASE_DELAY_MS 200
 #define FONT_SIZE 24
 
+bool WALL_COLLISON = true;
+
 typedef struct
 {
     int x, y;
@@ -73,16 +75,13 @@ void generateFood(SnakeGame *game)
 
 bool checkCollision(SnakeGame *game)
 {
-    // Check wall
-    if (game->snake[0].x < 0)
-        game->snake[0].x = SCREEN_WIDTH - CELL_SIZE;
-    else if (game->snake[0].x >= SCREEN_WIDTH)
-        game->snake[0].x = 0;
-
-    if (game->snake[0].y < 0)
-        game->snake[0].y = SCREEN_HEIGHT - CELL_SIZE;
-    else if (game->snake[0].y >= SCREEN_HEIGHT)
-        game->snake[0].y = 0;
+    if (WALL_COLLISON)
+    {
+        if (game->snake[0].x < 0 || game->snake[0].x > (SCREEN_WIDTH - CELL_SIZE) || game->snake[0].y < 0 || game->snake[0].y > (SCREEN_HEIGHT - CELL_SIZE))
+        {
+            return true;
+        }
+    }
 
     // Check self collision
     for (int i = 1; i < game->snakeLength; ++i)
@@ -146,16 +145,19 @@ void update(SnakeGame *game)
         break;
     }
 
-    // Check wall
-    if (newHead.x < 0)
-        newHead.x = SCREEN_WIDTH - CELL_SIZE;
-    else if (newHead.x >= SCREEN_WIDTH)
-        newHead.x = 0;
+    if (!WALL_COLLISON)
+    {
+        // Check wall
+        if (newHead.x < 0)
+            newHead.x = SCREEN_WIDTH - CELL_SIZE;
+        else if (newHead.x >= SCREEN_WIDTH)
+            newHead.x = 0;
 
-    if (newHead.y < 0)
-        newHead.y = SCREEN_HEIGHT - CELL_SIZE;
-    else if (newHead.y >= SCREEN_HEIGHT)
-        newHead.y = 0;
+        if (newHead.y < 0)
+            newHead.y = SCREEN_HEIGHT - CELL_SIZE;
+        else if (newHead.y >= SCREEN_HEIGHT)
+            newHead.y = 0;
+    }
 
     // Check eat
     if (newHead.x == game->food.x && newHead.y == game->food.y)
@@ -172,10 +174,10 @@ void update(SnakeGame *game)
     }
     game->snake[0] = newHead;
 
-    // if (checkCollision(game))
-    //{
-    //     game->running = false;
-    // }
+    if (checkCollision(game))
+    {
+        game->running = false;
+    }
 }
 
 void renderText(SnakeGame *game, const char *text, int x, int y)
